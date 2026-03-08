@@ -27,10 +27,12 @@ Documentadas en `.env.example`:
 
 ## Ejemplos curl
 
-Los endpoints protegidos requieren un token JWT:
+Los endpoints protegidos requieren un token JWT. Para generar uno desde la terminal, es necesario tener las dependencias instaladas:
 
 ```bash
-# Generar un token de prueba (requiere Node.js)
+npm install
+
+# Generar un token de prueba
 TOKEN=$(node -e "console.log(require('jsonwebtoken').sign({sub:'test'},process.env.JWT_SECRET||'supersecret',{expiresIn:'1h'}))")
 ```
 
@@ -93,9 +95,9 @@ curl http://localhost:3000/health
 # Respuesta: { "status": "ok" }
 ```
 
-## Correr tests
+## Ejecutar tests
 
-Requiere PostgreSQL corriendo en `localhost:5432`. Puedes usar el Postgres del propio `docker-compose` (si ya lo tienes levantado) o una instancia local.
+Requiere PostgreSQL funcionando en `localhost:5432`. Se puede usar el Postgres del propio `docker-compose` (si ya está levantado) o una instancia local.
 
 Los tests usan una base de datos separada (`dbname_test`) que se crea automáticamente, sin afectar los datos de la app:
 
@@ -110,13 +112,13 @@ npm test
 
 La idempotencia se resuelve a nivel de base de datos, no de aplicación. La tabla `users` tiene una constraint `UNIQUE(credential, email)` y el endpoint usa un `INSERT ... ON CONFLICT DO UPDATE` (UPSERT).
 
-Para distinguir si la fila fue insertada o actualizada se usa `(xmax = 0) AS created` en el `RETURNING`. En PostgreSQL, `xmax` es un campo interno del sistema: cuando vale `0` significa que la fila fue recién insertada (no tiene transacción previa que la haya modificado). Si `xmax > 0`, la fila ya existía y fue actualizada por el `ON CONFLICT`.
+Para distinguir si la fila fue insertada o actualizada, se usa `(xmax = 0) AS created` en el `RETURNING`. En PostgreSQL, `xmax` es un campo interno del sistema: cuando vale `0` significa que la fila fue recién insertada (no tiene transacción previa que la haya modificado). Si `xmax > 0`, la fila ya existía y fue actualizada por el `ON CONFLICT`.
 
 Esto evita queries adicionales (como un `SELECT` previo) y mantiene la operación atómica en una sola sentencia SQL.
 
 ### Repository pattern
 
-El acceso a datos está aislado en `src/repositories/userRepository.ts`, que contiene únicamente el query SQL. La capa de servicio (`userService.ts`) maneja la lógica de negocio y el mapeo de respuesta. Los route handlers solo se encargan de validación, logging y delegación al servicio.
+El acceso a datos está aislado en `src/repositories/userRepository.ts`, que contiene únicamente el query SQL. La capa de servicio (`userService.ts`) gestiona la lógica de negocio y el mapeo de respuesta. Los route handlers solo se encargan de la validación, el logging y la delegación al servicio.
 
 Flujo: `routes → services → repositories → db pool`
 
