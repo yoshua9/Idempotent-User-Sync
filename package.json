@@ -9,7 +9,7 @@
     "dev": "ts-node src/index.ts",
     "migrate": "ts-node src/db/migrate.ts",
     "pretest": "ts-node tests/setup.ts",
-    "test": "DATABASE_URL=postgres://user:pass@localhost:5432/dbname_test jest --forceExit --detectOpenHandles"
+    "test": "DATABASE_URL=postgres://user:pass@localhost:5432/dbname_test JWT_SECRET=test-secret jest --forceExit --detectOpenHandles"
   },
   "dependencies": {
     "bcrypt": "^5.1.0",
