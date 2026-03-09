@@ -8,6 +8,13 @@ Microservicio REST que sincroniza usuarios de forma idempotente usando UPSERT en
 
 ## Levantar con Docker
 
+Antes de arrancar, crear un archivo `.env` en la raíz del proyecto con el secret para JWT:
+
+```bash
+cp .env.example .env
+# Editar .env y establecer un valor seguro para JWT_SECRET
+```
+
 ```bash
 docker-compose up --build
 ```
@@ -22,7 +29,7 @@ Documentadas en `.env.example`:
 |---|---|---|
 | `PORT` | Puerto del servidor | `3000` |
 | `DATABASE_URL` | Connection string de PostgreSQL | `postgres://user:pass@localhost:5432/dbname` |
-| `JWT_SECRET` | Clave para firmar/verificar JWT | `supersecret` |
+| `JWT_SECRET` | **Obligatoria.** Clave para firmar/verificar JWT. El servicio no arranca sin ella | — |
 | `BCRYPT_ROUNDS` | Rondas de hashing bcrypt | `10` |
 
 ## Ejemplos curl
@@ -32,8 +39,11 @@ Los endpoints protegidos requieren un token JWT. Para generar uno desde la termi
 ```bash
 npm install
 
+# Exportar el JWT_SECRET (debe coincidir con el valor en .env)
+export $(grep JWT_SECRET .env)
+
 # Generar un token de prueba
-TOKEN=$(node -e "console.log(require('jsonwebtoken').sign({sub:'test'},process.env.JWT_SECRET||'supersecret',{expiresIn:'1h'}))")
+TOKEN=$(node -e "console.log(require('jsonwebtoken').sign({sub:'test'},process.env.JWT_SECRET,{expiresIn:'1h'}))")
 ```
 
 El servicio soporta el header `x-correlation-id` para trazabilidad. Si no se envía, se genera uno automáticamente. El mismo ID se devuelve en la respuesta y aparece en los logs:
@@ -123,3 +133,7 @@ El acceso a datos está aislado en `src/repositories/userRepository.ts`, que con
 Flujo: `routes → services → repositories → db pool`
 
 Cada capa solo conoce a la inmediatamente inferior.
+
+### Validación y normalización
+
+Los campos del payload se validan con zod aplicando `trim()` y `max(255)`. El email se normaliza a minúsculas (`toLowerCase()`) para evitar duplicados por diferencias de casing (por ejemplo, `User@Test.com` y `user@test.com` se tratan como el mismo email).
