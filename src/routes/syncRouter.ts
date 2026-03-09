@@ -7,9 +7,9 @@ import { AppError } from "../middlewares/errorHandler";
 const logger = pino();
 
 const syncUserSchema = z.object({
-  credential: z.string().min(1),
-  email:      z.string().email(),
-  name:       z.string().min(1),
+  credential: z.string().trim().min(1).max(255),
+  email:      z.string().trim().email().max(255).transform((v) => v.toLowerCase()),
+  name:       z.string().trim().min(1).max(255),
 });
 
 const syncRouter = Router();

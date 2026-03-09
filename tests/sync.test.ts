@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import app from "../src/index";
 import pool from "../src/config/db";
 
-const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
+const JWT_SECRET = process.env.JWT_SECRET!;
 
 function generateToken(): string {
   return jwt.sign({ sub: "test-user" }, JWT_SECRET, { expiresIn: "1h" });

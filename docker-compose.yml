@@ -23,6 +23,7 @@ services:
     environment:
       PORT: 3000
       DATABASE_URL: postgres://user:pass@postgres:5432/dbname
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET env var is required}
     depends_on:
       postgres:
         condition: service_healthy
